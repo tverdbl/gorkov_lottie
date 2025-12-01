@@ -95,9 +95,7 @@
 
         // Загрузка локальных файлов
         document.getElementById('fileInput').addEventListener('change', e => {
-            Array.from(e.target.files).forEach(file => {
-                if (file.name.endsWith('.json')) loadAnimation(file);
-            });
+            Array.from(e.target.files).forEach(file => { if (file.name.endsWith('.json')) loadAnimation(file); });
         });
 
         document.addEventListener('dragover', e => { e.preventDefault(); document.body.style.backgroundColor = '#2a2a2a'; });
@@ -111,28 +109,4 @@
         // Загрузка из localStorage
         window.addEventListener('load', () => {
             const stored = JSON.parse(localStorage.getItem('lottieAnimations') || '{}');
-            Object.entries(stored).forEach(([name, data]) => {
-                const virtualFile = new File([JSON.stringify(data)], name, { type: 'application/json' });
-                loadAnimation(virtualFile);
-            });
-            // Подгружаем с сервера (GitHub)
-            loadServerAnimations();
-        });
-
-        // Загрузка JSON с сервера
-        async function loadServerAnimations() {
-            const list = ["data.json","data-02.json"]; // сюда добавляй новые
-            for (const fileName of list) {
-                const url = `animations/${fileName}`;
-                try {
-                    const response = await fetch(url);
-                    if (!response.ok) continue;
-                    const data = await response.json();
-                    const virtualFile = new File([JSON.stringify(data)], fileName, { type: "application/json" });
-                    loadAnimation(virtualFile);
-                } catch(e) { console.error(`Ошибка загрузки ${fileName}`, e); }
-            }
-        }
-    </script>
-</body>
-</html>
+            Object.
