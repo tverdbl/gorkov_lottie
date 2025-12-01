@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Горьков Чай Lottie</title>
+    <!-- Берем библиотеку с CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #00ff88;
+        }
+        
+        .upload-section {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        #fileInput {
+            background: #3a3a3a;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            border: 2px dashed #00ff88;
+            cursor: pointer;
+        }
+        
+        .animations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .animation-card {
+            background: #2a2a2a;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+        
+        .player {
+            width: 100%;
+            height: 200px;
+            background: #1a1a1a;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        button {
+            background: #00ff88;
+            color: black;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background: #00cc6a;
+        }
+        
+        input[type="range"] {
+            width: 100px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎬 Горьков Чай Lottie</h1>
+    
+    <div class="upload-section">
+        <h3>Загрузи новую анимацию:</h3>
+        <input type="file" id="fileInput" accept=".json">
+        <p style="margin-top: 10px; color: #aaa;">Просто перетащи .json файл сюда или кликни</p>
+    </div>
+    
+    <div class="animations-grid" id="animationsContainer">
+        <!-- Анимации будут появляться здесь -->
+    </div>
+
+    <script>
+        let animations = [];
+        
+        // Обработчик загрузки файлов
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            files.forEach(file => {
+                if (file.name.endsWith('.json')) {
+                    loadAnimation(file);
+                }
+            });
+        });
+        
+        // Загрузка через Drag & Drop
+        document.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            document.body.style.backgroundColor = '#2a2a2a';
+        });
+        
+        document.addEventListener('dragleave', function(e) {
+            document.body.style.backgroundColor = '#1a1a1a';
+        });
+        
+        document.addEventListener('drop', function(e) {
+            e.preventDefault();
+            document.body.style.backgroundColor = '#1a1a1a';
+            
+            const files = Array.from(e.dataTransfer.files);
+            files.forEach(file => {
+                if (file.name.endsWith('.json')) {
+                    loadAnimation(file);
+                }
+            });
+        });
+        
+        function loadAnimation(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                const animationData = JSON.parse(event.target.result);
+                const animationId = 'anim_' + Date.now() + Math.random();
+                
+                // Создаем карточку для анимации
+                const card = document.createElement('div');
+                card.className = 'animation-card';
+                card.innerHTML = `
+                    <h4>${file.name}</h4>
+                    <div class="player" id="${animationId}"></div>
+                    <div class="controls">
+                        <button onclick="playAnimation('${animationId}')">▶️ Воспроизвести</button>
+                        <button onclick="pauseAnimation('${animationId}')">⏸️ Пауза</button>
+                        <button onclick="restartAnimation('${animationId}')">🔄 Сначала</button>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <label>Скорость: </label>
+                        <input type="range" min="0.1" max="3" step="0.1" value="1" 
+                               oninput="changeSpeed('${animationId}', this.value)">
+                        <span id="speed_${animationId}">1x</span>
+                    </div>
+                `;
+                
+                document.getElementById('animationsContainer').appendChild(card);
+                
+                // Загружаем анимацию
+                const anim = lottie.loadAnimation({
+                    container: document.getElementById(animationId),
+                    renderer: 'svg',
+                    loop: true,
+                    autoplay: true,
+                    animationData: animationData
+                });
+                
+                animations.push({
+                    id: animationId,
+                    instance: anim,
+                    name: file.name
+                });
+                
+                // Сохраняем в localStorage
+                saveToLocalStorage(file.name, animationData);
+            };
+            
+            reader.readAsText(file);
+        }
+        
+        // Функции управления
+        window.playAnimation = function(id) {
+            const anim = animations.find(a => a.id === id);
+            if (anim) anim.instance.play();
+        };
+        
+        window.pauseAnimation = function(id) {
+            const anim = animations.find(a => a.id === id);
+            if (anim) anim.instance.pause();
+        };
+        
+        window.restartAnimation = function(id) {
+            const anim = animations.find(a => a.id === id);
+            if (anim) {
+                anim.instance.stop();
+                anim.instance.play();
+            }
+        };
+        
+        window.changeSpeed = function(id, speed) {
+            const anim = animations.find(a => a.id === id);
+            if (anim) {
+                anim.instance.setSpeed(speed);
+                document.getElementById('speed_' + id).textContent = speed + 'x';
+            }
+        };
+        
+        // Сохранение в localStorage (чтобы не грузить каждый раз)
+        function saveToLocalStorage(name, data) {
+            const stored = JSON.parse(localStorage.getItem('lottieAnimations') || '{}');
+            stored[name] = data;
+            localStorage.setItem('lottieAnimations', JSON.stringify(stored));
+        }
+        
+        // Загрузка из localStorage при старте
+        window.addEventListener('load', function() {
+            const stored = JSON.parse(localStorage.getItem('lottieAnimations') || '{}');
+            Object.entries(stored).forEach(([name, data]) => {
+                // Создаем виртуальный файл
+                const virtualFile = new File([JSON.stringify(data)], name, { type: 'application/json' });
+                loadAnimation(virtualFile);
+            });
+        });
+    </script>
+</body>
+</html>
