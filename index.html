@@ -230,6 +230,28 @@
                 loadAnimation(virtualFile);
             });
         });
-    </script>
+   async function loadServerAnimations() {
+    const list = [
+        "data.json",
+        "data-02.json"
+        // сюда вписывай новые json
+    ];
+
+    for (const fileName of list) {
+        const url = `animations/${fileName}`;
+        const response = await fetch(url);
+
+        if (!response.ok) continue;
+
+        const data = await response.json();
+        const virtual = new File([JSON.stringify(data)], fileName, { type: "application/json" });
+
+        loadAnimation(virtual);
+    }
+}
+
+loadServerAnimations();
+</script>
 </body>
+
 </html>
